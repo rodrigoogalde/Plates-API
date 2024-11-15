@@ -15,4 +15,4 @@ app.use(Logger());
 // Ahora el servidor utiliza el router principal
 app.use(router.routes());
 
-app.listen(3001);
+app.listen(3000);
