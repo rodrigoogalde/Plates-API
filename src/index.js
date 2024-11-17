@@ -1,21 +1,20 @@
-const app = require("./app");
-const db = require("./models");
-const createWebSocketServer = require("./websocketServer");
+// src/index.js
+const Koa = require('koa');
+const Logger = require('koa-logger');
+const { koaBody } = require("koa-body");
 
-const PORT = 3000;
+const bodyParser = require('koa-bodyparser');
+// Importamos el router principal
+const router = require('./routes');
 
-db.sequelize
-  .authenticate()
-  .then(() => {
-    console.log("Connection to the database has been established successfully.");
-    const server = app.listen(PORT, (err) => {
-      if (err) {
-        return console.error("Failed", err);
-      }
-      console.log(`Listening on port ${PORT}`);
-      
-      createWebSocketServer(server);
-      return app;
-    });
-  })
-  .catch((err) => console.error("Unable to connect to the database:", err));
+
+const app = new Koa();
+app.use(koaBody());
+app.use(bodyParser());
+
+app.use(Logger());
+
+// Ahora el servidor utiliza el router principal
+app.use(router.routes());
+
+app.listen(3000);
