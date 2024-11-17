@@ -14,7 +14,7 @@ db.sequelize
       }
       console.log(`Listening on port ${PORT}`);
       
-      createWebSocketServer(server);
+    //   createWebSocketServer(server);
       return app;
     });
   })
