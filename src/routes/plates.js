@@ -51,10 +51,6 @@ router.get('/paramsExtracted', (ctx) => {
 router.post('/api', (ctx) => {
     console.log(ctx);
     const { postMessage, params } = ctx.request.body;
-    console.log('\n')
-    console.log(ctx.req.body);  
-    console.log('\n')
-    console.log(ctx.request.body);
 
     // Reemplazar los placeholders con los valores del cuerpo
     let processedMessage = postMessage;
