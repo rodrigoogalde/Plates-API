@@ -1,7 +1,8 @@
 const Router = require('koa-router');
 const router = new Router();
-const fs = require('fs');
-const path = require('path');
+const { generateFile, uploadToFtp } = require('../controller/plateController');
+
+require("dotenv").config();
 
 router.get('/', async (ctx) => {
         const plates = await ctx.orm.Plate.findAll();
@@ -11,7 +12,6 @@ router.get('/', async (ctx) => {
 
 
 router.post('/add', async (ctx) => {
-
     const plate = await ctx.orm.Plate.findOne({
         where: {
             plate: ctx.request.body.plate,
@@ -29,6 +29,8 @@ router.post('/add', async (ctx) => {
 
     try {
         const newPlate = await ctx.orm.Plate.create(ctx.request.body);
+        await generateFile(ctx);
+        await uploadToFtp(ctx);
         ctx.status = 201;
         ctx.body = newPlate;
     }
@@ -58,47 +60,62 @@ router.post('/api', (ctx) => {
     };
 });
 
-router.post('/generate-file', async (ctx) => {
+
+// Actualizar un registro
+router.put('/update/:id', async (ctx) => {
     try {
-        const plates = await ctx.orm.Plate.findAll(); // Obtén todos los registros
-        const listId = 2; // ID predefinido para el archivo
-        const currentTimestamp = new Date().toISOString().replace("Z", "").slice(0, -3); // Fecha y hora actual en formato ISO
+        const plate = await ctx.orm.Plate.findByPk(ctx.params.id);
 
-        // Ruta del archivo CSV de salida
-        const formatFile = path.join(__dirname, '../../data/ZKTeco_Plates.csv');
+        if (!plate) {
+            ctx.status = 404;
+            ctx.body = { message: 'Patente no encontrada' };
+            return;
+        }
 
-        // Cabeceras del archivo
-        const headerLines = [
-            "nllist-id;description;color;levenshteindist",
-            `${listId};Propietarios;#000000;0`,
-            "nlelemlist-id;numberplate;listid;timestamp;description;startvaliditydate;endvaliditydate",
-        ];
+        await plate.update(ctx.request.body);
 
-        // Escribir las cabeceras en el archivo
-        fs.writeFileSync(formatFile, headerLines.join("\n") + "\n");
-
-        // Procesar las filas y escribirlas en el archivo
-        let nlelemlistId = 2; // Comienza en 2
-        plates.forEach((plate, index) => {
-            if (!plate.plate || plate.plate.trim() === "") {
-                console.warn(`Advertencia: fila omitida debido a 'plate' vacío en índice ${index}`);
-                return;
-            }
-
-            const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};${currentTimestamp};3000-01-01T00:00:00.000`;
-            fs.appendFileSync(formatFile, outputLine + "\n");
-            nlelemlistId++;
-        });
+        await generateFile(ctx);
+        await uploadToFtp(ctx);
 
         ctx.status = 200;
         ctx.body = {
-            message: `Archivo generado exitosamente en ${formatFile}`
+            message: 'Patente actualizada exitosamente',
+            plate,
         };
     } catch (error) {
-        console.error("Error al generar el archivo:", error);
         ctx.status = 500;
         ctx.body = {
-            error: "Error al generar el archivo."
+            message: 'Error al actualizar la patente',
+            error,
+        };
+    }
+});
+
+router.delete('/delete/:id', async (ctx) => {
+    try {
+        const plate = await ctx.orm.Plate.findByPk(ctx.params.id);
+
+        if (!plate) {
+            ctx.status = 404;
+            ctx.body = { message: 'Patente no encontrada' };
+            return;
+        }
+
+        await plate.destroy();
+
+        // Generar y subir los archivos actualizados
+        await generateFile(ctx);
+        await uploadToFtp(ctx);
+
+        ctx.status = 200;
+        ctx.body = {
+            message: 'Patente eliminada exitosamente',
+        };
+    } catch (error) {
+        ctx.status = 500;
+        ctx.body = {
+            message: 'Error al eliminar la patente',
+            error,
         };
     }
 });
