@@ -10,7 +10,6 @@ router.get('/', async (ctx) => {
     }
 );
 
-
 router.post('/add', async (ctx) => {
     const plate = await ctx.orm.Plate.findOne({
         where: {
@@ -60,8 +59,6 @@ router.post('/api', (ctx) => {
     };
 });
 
-
-// Actualizar un registro
 router.put('/update/:id', async (ctx) => {
     try {
         const plate = await ctx.orm.Plate.findByPk(ctx.params.id);
