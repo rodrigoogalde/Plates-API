@@ -1,5 +1,7 @@
 const Router = require('koa-router');
 const router = new Router();
+const fs = require('fs');
+const path = require('path');
 
 router.get('/', async (ctx) => {
         const plates = await ctx.orm.Plate.findAll();
@@ -56,5 +58,49 @@ router.post('/api', (ctx) => {
     };
 });
 
+router.post('/generate-file', async (ctx) => {
+    try {
+        const plates = await ctx.orm.Plate.findAll(); // Obtén todos los registros
+        const listId = 2; // ID predefinido para el archivo
+        const currentTimestamp = new Date().toISOString().replace("Z", "").slice(0, -3); // Fecha y hora actual en formato ISO
+
+        // Ruta del archivo CSV de salida
+        const formatFile = path.join(__dirname, '../../data/ZKTeco_Plates.csv');
+
+        // Cabeceras del archivo
+        const headerLines = [
+            "nllist-id;description;color;levenshteindist",
+            `${listId};Propietarios;#000000;0`,
+            "nlelemlist-id;numberplate;listid;timestamp;description;startvaliditydate;endvaliditydate",
+        ];
+
+        // Escribir las cabeceras en el archivo
+        fs.writeFileSync(formatFile, headerLines.join("\n") + "\n");
+
+        // Procesar las filas y escribirlas en el archivo
+        let nlelemlistId = 2; // Comienza en 2
+        plates.forEach((plate, index) => {
+            if (!plate.plate || plate.plate.trim() === "") {
+                console.warn(`Advertencia: fila omitida debido a 'plate' vacío en índice ${index}`);
+                return;
+            }
+
+            const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};${currentTimestamp};3000-01-01T00:00:00.000`;
+            fs.appendFileSync(formatFile, outputLine + "\n");
+            nlelemlistId++;
+        });
+
+        ctx.status = 200;
+        ctx.body = {
+            message: `Archivo generado exitosamente en ${formatFile}`
+        };
+    } catch (error) {
+        console.error("Error al generar el archivo:", error);
+        ctx.status = 500;
+        ctx.body = {
+            error: "Error al generar el archivo."
+        };
+    }
+});
 
 module.exports = router;
