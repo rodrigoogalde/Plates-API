@@ -1,16 +1,17 @@
 const Router = require('koa-router');
 const router = new Router();
 const { generateFile, uploadToFtp } = require('../controller/plateController');
+const authUtils = require('../auth/jwt');
 
 require("dotenv").config();
 
-router.get('/', async (ctx) => {
+router.get('/', authUtils.isAdmin, async (ctx) => {
         const plates = await ctx.orm.Plate.findAll();
         ctx.body = plates;
     }
 );
 
-router.post('/add', async (ctx) => {
+router.post('/add', authUtils.isAdmin, async (ctx) => {
     const plate = await ctx.orm.Plate.findOne({
         where: {
             plate: ctx.request.body.plate,
@@ -41,7 +42,7 @@ router.post('/add', async (ctx) => {
     }
 });
 
-router.get('/all/:site', async (ctx) => {
+router.get('/all/:site', authUtils.isAdmin, async (ctx) => {
     const plates = await ctx.orm.Plate.findAll({
         where: {
             site: ctx.params.site
@@ -59,7 +60,7 @@ router.post('/api', (ctx) => {
     };
 });
 
-router.put('/update/:id', async (ctx) => {
+router.put('/update/:id', authUtils.isAdmin, async (ctx) => {
     try {
         const plate = await ctx.orm.Plate.findByPk(ctx.params.id);
 
@@ -88,7 +89,7 @@ router.put('/update/:id', async (ctx) => {
     }
 });
 
-router.delete('/delete/:id', async (ctx) => {
+router.delete('/delete/:id', authUtils.isAdmin, async (ctx) => {
     try {
         const plate = await ctx.orm.Plate.findByPk(ctx.params.id);
 
