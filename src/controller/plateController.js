@@ -11,6 +11,9 @@ const generateFile = async (ctx) => {
 
         const formatFile = path.join(__dirname, "../../data/ZKTeco_Plates.csv");
 
+        // Creamos el directorio en caso que no exista
+        await fs.ensureDir(path.dirname(formatFile));
+
         const headerLines = [
             "nllist-id;description;color;levenshteindist",
             `${listId};Propietarios;#000000;0`,
