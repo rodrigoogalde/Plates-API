@@ -34,10 +34,10 @@ const generateFile = async (ctx) => {
                 return;
             }
 
-            // Si plate.site parte con A, se asigna el valor 2, de lo contrario 3
-            if (plate.site.startsWith("A") || plate.site.startsWith("B") || plate.site.startsWith("C")) {
-                listId = 4;
-            }
+            // // Si plate.site parte con A, se asigna el valor 2, de lo contrario 3
+            // if (plate.site.startsWith("A") || plate.site.startsWith("B") || plate.site.startsWith("C")) {
+            //     listId = 4;
+            // }
 
             const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};${currentTimestamp};3000-01-01T00:00:00.000`;
             fs.appendFileSync(formatFile, outputLine + "\n");
