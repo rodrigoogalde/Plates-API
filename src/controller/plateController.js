@@ -6,7 +6,7 @@ const moment = require("moment");
 const generateFile = async (ctx) => {
     try {
         const plates = await ctx.orm.Plate.findAll(); // Obtén todos los registros
-        const listId = 2; // ID predefinido para el archivo
+        let listId = 2; // ID predefinido para el archivo
         const currentTimestamp = new Date().toISOString().replace("Z", "").slice(0, -3); // Fecha y hora actual en formato ISO
 
         const formatFile = path.join(__dirname, "../../data/ZKTeco_Plates.csv");
@@ -16,22 +16,33 @@ const generateFile = async (ctx) => {
 
         const headerLines = [
             "nllist-id;description;color;levenshteindist",
-            `${listId};Propietarios;#000000;0`,
-            "nlelemlist-id;numberplate;listid;timestamp;description;startvaliditydate;endvaliditydate",
+            "-2;all plates;#000000;0",
+            "-1;not in list;#000000;0",
+            "1;BLOCKLIST;#000000;0",
+            "2;Propietarios;#000000;0",
+            "3;Invitados;#000000;0",
+            "4;Propietarios_Habilitados;#000000;0",
+            "nlelemlist-id;numberplate;listid;timestamp;description;startvaliditydate;endvaliditydate"
         ];
 
         fs.writeFileSync(formatFile, headerLines.join("\n") + "\n");
 
-        let nlelemlistId = 2; // Comienza en 2
+        let nlelemlistId = 2;
         plates.forEach((plate, index) => {
             if (!plate.plate || plate.plate.trim() === "") {
-                console.warn(`Advertencia: fila omitida debido a 'plate' vacío en índice ${index}`);
+                // console.warn(`Advertencia: fila omitida debido a 'plate' vacío en índice ${index}`);
                 return;
+            }
+
+            // Si plate.site parte con A, se asigna el valor 2, de lo contrario 3
+            if (plate.site.startsWith("A") || plate.site.startsWith("B") || plate.site.startsWith("C")) {
+                listId = 4;
             }
 
             const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};${currentTimestamp};3000-01-01T00:00:00.000`;
             fs.appendFileSync(formatFile, outputLine + "\n");
             nlelemlistId++;
+            listId = 2;
         });
 
         ctx.status = 200;
