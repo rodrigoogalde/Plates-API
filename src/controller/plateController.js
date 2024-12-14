@@ -7,7 +7,8 @@ const generateFile = async (ctx) => {
     try {
         const plates = await ctx.orm.Plate.findAll(); // Obtén todos los registros
         let listId = 2; // ID predefinido para el archivo
-        const currentTimestamp = new Date().toISOString().replace("Z", "").slice(0, -3); // Fecha y hora actual en formato ISO
+        // const currentTimestamp = new Date().toISOString().replace("Z", "").slice(0, -3); // Fecha y hora actual en formato ISO
+        const currentTimestamp = moment().subtract(8, "hours").format("YYYY-MM-DDTHH:mm:ss"); // Formato ISO sin 'Z'
 
         const formatFile = path.join(__dirname, "../../data/ZKTeco_Plates.csv");
 
@@ -39,7 +40,7 @@ const generateFile = async (ctx) => {
             //     listId = 4;
             // }
 
-            const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};${currentTimestamp};3000-01-01T00:00:00.000`;
+            const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};2024-01-01T00:00:00.000;3000-01-01T00:00:00.000`;
             fs.appendFileSync(formatFile, outputLine + "\n");
             nlelemlistId++;
             listId = 2;
