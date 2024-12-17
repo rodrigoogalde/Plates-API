@@ -22,7 +22,6 @@ const generateFile = async (ctx) => {
             "1;BLOCKLIST;#000000;0",
             "2;Propietarios;#000000;0",
             "3;Invitados;#000000;0",
-            "4;Propietarios_Habilitados;#000000;0",
             "nlelemlist-id;numberplate;listid;timestamp;description;startvaliditydate;endvaliditydate"
         ];
 
@@ -34,11 +33,6 @@ const generateFile = async (ctx) => {
                 // console.warn(`Advertencia: fila omitida debido a 'plate' vacío en índice ${index}`);
                 return;
             }
-
-            // // Si plate.site parte con A, se asigna el valor 2, de lo contrario 3
-            // if (plate.site.startsWith("A") || plate.site.startsWith("B") || plate.site.startsWith("C")) {
-            //     listId = 4;
-            // }
 
             const outputLine = `${nlelemlistId};${plate.plate};${listId};${currentTimestamp};${plate.site};2024-01-01T00:00:00.000;3000-01-01T00:00:00.000`;
             fs.appendFileSync(formatFile, outputLine + "\n");
